@@ -37,5 +37,5 @@ jobs:
           version: "0.12.2"
       - name: Install ripgrep
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y ripgrep
-      - run: make all
+      - run: make all TEST_ALIAS=equivalence-published
         working-directory: dresser.spool
