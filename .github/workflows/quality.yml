@@ -24,6 +24,11 @@ jobs:
           repository: codethread/millstrand
           ref: fb6c9057d594bfa4b5ea8531b9774b5e9a23a4b4
           path: millstrand
+      - uses: actions/checkout@v4
+        with:
+          repository: codethread/millhouse.spool
+          ref: 8f386b09fb8e8506a3c38105dce8e8552142dbf8
+          path: millhouse.spool
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
