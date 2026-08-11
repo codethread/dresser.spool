@@ -1,17 +1,6 @@
 {:lint-as
- {millstrand.test.alpha/with-weaver-world clojure.core/let
-  millstrand.api.millstrand.alpha/defop clojure.core/defn
-  millstrand.api.lifecycle.alpha/defseed clojure.core/def}
- :linters
- {:unresolved-var
-  {:exclude [millstrand.spools.workflow/defworkflow
-             millstrand.spools.workflow/static-definition
-             dresser/dresser-op]}
-  :unresolved-symbol
-  {:exclude [spool-repo millstrand-dir abort
-             spool-repo.repo-skeleton spool-repo.millstrand-workspace
-             spool-repo.agent-docs spool-repo.quality spool-repo.docs spool-repo.ci
-             millstrand-dir.workspace millstrand-dir.quality millstrand-dir.agent-docs]}}
+ {}
+ :linters {}
  :hooks
  {:analyze-call
   {ct.spools.dresser-test/with-temp-dir hooks.dresser/with-temp-dir

@@ -8,12 +8,27 @@
                    :main-opts ["-m" "clj-kondo.main" "--lint" "src" "test"]}
   :lint/splint {:extra-deps {io.github.noahtheduke/splint {:mvn/version "1.21.0"}}
                 :main-opts ["-m" "noahtheduke.splint" "--output" "clj-kondo" "src" "test"]}
-  :test {:extra-paths ["test" "../millstrand/spools/workflow/src"]
-         ;; The published Millstrand core is consumed by immutable SHA. The
-         ;; workflow spool is a source root in that same checkout during local
-         ;; tests; it is not a published consumer override.
-         :extra-deps {io.millstrand/millstrand
-                      {:git/url "https://github.com/codethread/millstrand.git"
-                       :git/sha "5790c459e9bb692b5e975f9715df7d5b403feff2"}}
+  :test {:extra-paths ["test"]
+         ;; Local development deliberately overlays the two sibling source
+         ;; roots. Published/equivalence proof uses the immutable alias below.
+         :extra-deps {io.millstrand/millstrand {:local/root "../millstrand"}
+                      millhouse.spools/workflow
+                      {:local/root "../millhouse.spool/spools/workflow"}
+                      millhouse.spools.executors/shell
+                      {:local/root "../millhouse.spool/spools/shell-executor"}}
          :jvm-opts ["--enable-native-access=ALL-UNNAMED"]
-         :main-opts ["-m" "ct.spools.dresser-test"]}}}
+         :main-opts ["-m" "ct.spools.dresser-test"]}
+  :equivalence-published {:extra-paths ["test"]
+                          :extra-deps {io.millstrand/millstrand
+                                       {:git/url "https://github.com/codethread/millstrand.git"
+                                        :git/sha "fb6c9057d594bfa4b5ea8531b9774b5e9a23a4b4"}
+                                       millhouse.spools/workflow
+                                       {:git/url "https://github.com/codethread/millhouse.spool.git"
+                                        :git/sha "8f386b09fb8e8506a3c38105dce8e8552142dbf8"
+                                        :deps/root "spools/workflow"}
+                                       millhouse.spools.executors/shell
+                                       {:git/url "https://github.com/codethread/millhouse.spool.git"
+                                        :git/sha "8f386b09fb8e8506a3c38105dce8e8552142dbf8"
+                                        :deps/root "spools/shell-executor"}}
+                          :jvm-opts ["--enable-native-access=ALL-UNNAMED"]
+                          :main-opts ["-m" "ct.spools.dresser-test"]}}}

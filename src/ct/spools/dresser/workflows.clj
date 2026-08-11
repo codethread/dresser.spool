@@ -17,7 +17,7 @@
             [millstrand.api.spool.alpha :as spool]
             [ct.spools.dresser.aspects :as aspects]
             [ct.spools.dresser.specs :as specs]
-            [millstrand.spools.workflow :as workflow]))
+            [millhouse.spools.workflow :as workflow]))
 
 (defn- aspect-parts [aspect-key]
   (let [[flavour aspect-name :as parts] (str/split aspect-key #"/" 2)]

@@ -11,7 +11,7 @@
             [ct.spools.dresser-fixtures :as fixtures]
             [ct.spools.dresser.receipt :as receipt]
             [ct.spools.dresser.target :as target]
-            [millstrand.spools.workflow :as workflow]))
+            [millhouse.spools.workflow :as workflow]))
 
 (defn- op! [runtime & args]
   (weaver/op! runtime 'dresser (vec args)))

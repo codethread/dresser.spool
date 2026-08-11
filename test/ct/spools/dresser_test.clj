@@ -21,7 +21,7 @@
             [ct.spools.dresser.target :as target]
             [ct.spools.dresser.templates :as templates]
             [ct.spools.dresser.workflows :as dresser-workflows]
-            [millstrand.spools.workflow :as workflow]
+            [millhouse.spools.workflow :as workflow]
             [millstrand.test.alpha :as t])
   (:import (java.nio.charset StandardCharsets)
            (java.nio.file Files Path)
@@ -112,7 +112,7 @@
   Templates declare which parameters they consume, so a template rendered with
   this map may ignore most of it, but none of them can be missing."
   {:name "acme"
-   :millstrand-sha "5790c459e9bb692b5e975f9715df7d5b403feff2"
+   :millstrand-sha "fb6c9057d594bfa4b5ea8531b9774b5e9a23a4b4"
    :repo-name "codethread/acme.spool"
    :git-branch "main"
    :site-name "acme.spool Docs"
@@ -148,11 +148,11 @@
    "millstrand/init-minimal.clj" "d7b19c0f2868fa6fdf7fbf9d3db5a39faa90a9006eb1fb792f8b4e7f110db51e"
    "millstrand/init-layered.clj" "3ce849d14f03afe1c690b57e80cfe32f2572aec2a955b7d10df43d4b90f5b596"
    "millstrand/gitignore" "d8d19488fe52e731338acc28e1d719a7b23c170755450d813c42c245e1931f66"
-   "spool-repo/deps.edn" "f51e15419811334df4b0e55988e5b37f95a018570f246a075241178e406dc3fb"
+   "spool-repo/deps.edn" "1e36d02d564cea64ecc254741bbb8e640a8163a6b95a3e442b12e25ee910ddc5"
    "spool-repo/src-ns.clj" "62e3d453dba6de042b886c1e569be9ca92051149e1fec5f697943a519e0ac86b"
    "spool-repo/test-main.clj" "17f97f5682347a75a725f4f82e72b472c43cf8a99820e60f1f11015d7839a6d6"
    "spool-repo/gitignore" "056f5cfa3c8446008026c3dac0e8d36c4dc5dae569d911447a611dd3b277cafa"
-   "spool-repo/readme" "4940188eca75d07b967be78c40cb573de3fc7bb0eb069d04e2411ef4934fe04b"
+   "spool-repo/readme" "45febac0d02e3a960aeb7575e52f62000cccf4670c9d1c96fd3d1285d9ceffe8"
    "spool-repo/agents.md" "ce9b0f577499252e88d408ef04b2907e48d67e14a6e5f003960538136ad60be5"
    "spool-repo/cljfmt.edn" "ca9c9d6d0341cbe6cbad764ac82ac0ad306f925f145c490cfb83e2e06ef2a9c0"
    "spool-repo/splint.edn" "9e777a191b3aae2ef63d691430d4875a0cc43f2b7130874fed060e53c01bda94"
@@ -201,7 +201,7 @@
         quality-blank-name (thrown-exception #(templates/template "spool-repo/quality.yml"
                                                                   {:name " "
                                                                    :millstrand-sha
-                                                                   "5790c459e9bb692b5e975f9715df7d5b403feff2"}))
+                                                                   "fb6c9057d594bfa4b5ea8531b9774b5e9a23a4b4"}))
         quality-invalid-sha (thrown-exception #(templates/template "spool-repo/quality.yml"
                                                                    {:name "acme"
                                                                     :millstrand-sha "not-a-sha"}))]
@@ -253,10 +253,10 @@
 
 (deftest aspect-registry-is-valid
   (is (= (set (keys expected-aspect-ids)) (set (keys aspects/registry))))
-  (is (= {"spool-repo/repo-skeleton" 7
+  (is (= {"spool-repo/repo-skeleton" 8
           "spool-repo/millstrand-workspace" 3
           "spool-repo/agent-docs" 1
-          "spool-repo/quality" 3
+          "spool-repo/quality" 4
           "spool-repo/docs" 1
           "spool-repo/ci" 1
           "millstrand-dir/workspace" 3

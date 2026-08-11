@@ -1,5 +1,7 @@
 .PHONY: all fmt fmt-check lint test ready-frontier-check identity-check release-check
 
+TEST_ALIAS ?= test
+
 all: fmt-check lint test ready-frontier-check identity-check
 
 fmt:
@@ -13,7 +15,7 @@ lint:
 	clojure -M:lint/splint
 
 test:
-	clojure -M:test
+	clojure -M:$(TEST_ALIAS)
 
 ready-frontier-check:
 	test/verify-ready-frontier.sh

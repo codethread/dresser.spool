@@ -22,8 +22,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: codethread/millstrand
-          ref: 5790c459e9bb692b5e975f9715df7d5b403feff2
+          ref: fb6c9057d594bfa4b5ea8531b9774b5e9a23a4b4
           path: millstrand
+      - uses: actions/checkout@v4
+        with:
+          repository: codethread/millhouse.spool
+          ref: 8f386b09fb8e8506a3c38105dce8e8552142dbf8
+          path: millhouse.spool
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -37,5 +42,5 @@ jobs:
           version: "0.12.2"
       - name: Install ripgrep
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y ripgrep
-      - run: make all
+      - run: make all TEST_ALIAS=equivalence-published
         working-directory: dresser.spool

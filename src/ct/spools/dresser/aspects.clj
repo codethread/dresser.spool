@@ -10,7 +10,7 @@
 
 (def release-version
   "Monotonic release for the complete aspect registry."
-  9)
+  10)
 
 (def releases
   "Published release fingerprints. Historical entries are immutable."
@@ -22,7 +22,8 @@
    6 "30964887cba66477f3e268116694853f154f71bc4af9397cdd99165806e54daf"
    7 "04cd916e114ac33ad7447f9151cfb046afd7cbf3061755f655642bbfc4037b98"
    8 "b6eeec076fbe2f24140db091442fbb861b5a406e2a174b5c0616674c71bafaad"
-   9 "a3de8dbab7efd2acfda17aadea0e7c7e40bb1a94f13e59b3e3b89cdb9cc61065"})
+   9 "a3de8dbab7efd2acfda17aadea0e7c7e40bb1a94f13e59b3e3b89cdb9cc61065"
+   10 "3a47ea94ad759a414d57c49be651e940169127051f86afb8776c0a28a2f97c63"})
 
 (def ^:private conflict-discipline
   "Honor the recorded conflict decisions for every owned file: keep preserves the customization, merge reconciles it with the canonical template, and replace uses the canonical template.")
@@ -36,7 +37,7 @@
 (def registry
   "The nine versioned dresser aspects, keyed by <flavour>/<aspect>."
   {"spool-repo/repo-skeleton"
-   {:version 7
+   {:version 8
     :deps []
     :owned ["deps.edn"
             "src/ct/spools/<name>.clj"
@@ -97,7 +98,7 @@
              :timeout-secs 30}]}
 
    "spool-repo/quality"
-   {:version 3
+   {:version 4
     :deps ["spool-repo/repo-skeleton"]
     :owned [".cljfmt.edn" ".splint.edn" "deps.edn" "Makefile" "make/quality.mk"]
     :inspect "Compare the quality configuration, deps.edn aliases, Makefile include line, and make/quality.mk with the canonical templates, record findings, and record a keep/merge/replace decision for each conflict."
@@ -158,8 +159,8 @@
                     "|Converge .github/workflows/quality.yml and .github/workflows/pages.yml using
                      |templates spool-repo/quality.yml and spool-repo/pages.yml.
                      |Render quality.yml with name and the required published Millstrand SHA as millstrand-sha;
-                     |it checks the repository out beside that immutable Millstrand checkout at <name>.spool,
-                     |which is the layout the test alias' ../millstrand coordinate assumes.
+                     |the workflow checks out that immutable core beside the generated repository for operator tooling,
+                     |while the generated test alias resolves Millstrand and Millhouse Workflow by Git coordinates.
                      |The quality gate consolidates clj-kondo and splint behind one make lint job,
                      |so a red build names lint rather than the offending linter; that is deliberate
                      |for a four-job repo, not an oversight.
