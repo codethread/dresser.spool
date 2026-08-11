@@ -10,7 +10,7 @@ behavior contract is in [dresser.md](./dresser.md).
 ## Prerequisites
 
 - A Millstrand checkout and a live weaver configured from an operator workspace.
-- Explicit approval of the workflow spool root at `<millstrand>/spools/workflow`.
+- Explicit approval of the Millhouse Workflow root `millhouse.spools/workflow`.
 - A 40-hex git SHA pin for this repository, or a local development override.
 - The shell executor namespace. It ships on the workflow spool classpath, needs
   no separate source approval, and is activation-only. Activate it after the
@@ -31,10 +31,14 @@ by its immutable SHA and can use:
 
 ```clojure
 {:spools
- {millstrand.spools/workflow
+ {io.millstrand/millstrand
   {:git/url "https://github.com/codethread/millstrand.git"
-   :git/sha "5790c459e9bb692b5e975f9715df7d5b403feff2"
-   :deps/root "spools/workflow"}
+   :git/sha "fb6c9057d594bfa4b5ea8531b9774b5e9a23a4b4"}
+
+  millhouse/spools
+  {:git/url "https://github.com/codethread/millhouse.spool.git"
+   :git/sha "8f386b09fb8e8506a3c38105dce8e8552142dbf8"
+   :roots {millhouse.spools/workflow "spools/workflow"}}
 
   codethread/dresser
   {:git/url "git@github.com:codethread/dresser.spool.git"
@@ -59,13 +63,14 @@ target. Startup config therefore declares only the source and world policy:
 
 ```clojure
 (runtime/module! runtime :workflow
-                 {:ns 'millstrand.spools.workflow
-                  :spools ['millstrand.spools/workflow]
+                 {:ns 'millhouse.spools.workflow
+                  :spools ['millhouse.spools/workflow]
                   :required? true})
 
 (runtime/module! runtime :shell-executor
-                 {:ns 'millstrand.spools.executors.shell
-                  :spools ['millstrand.spools/workflow]
+                 {:ns 'millhouse.spools.executors.shell
+                  :spools ['millhouse.spools.executors/shell
+                           'millhouse.spools/workflow]
                   :after [:workflow]
                   :required? true})
 
@@ -156,8 +161,9 @@ receipt writes are atomic per file but last-writer-wins across worlds.
 
 ## Development
 
-This checkout expects Millstrand at `../millstrand`; the test alias adds both the
-base checkout and its workflow spool root:
+Local development deliberately overlays Millstrand at `../millstrand` and the
+Millhouse Workflow root at `../millhouse.spool/spools/workflow`; the
+`equivalence-published` alias resolves both roots by immutable Git SHA:
 
 ```sh
 clojure -M:test
@@ -176,7 +182,7 @@ The template operation accepts the authoritative `::specs/template-input` shape,
 
 ```sh
 strand dresser template spool-repo/quality.yml \
-  --param name=acme --param millstrand-sha=5790c459e9bb692b5e975f9715df7d5b403feff2
+  --param name=acme --param millstrand-sha=fb6c9057d594bfa4b5ea8531b9774b5e9a23a4b4
 ```
 
 Template bytes are covered by `expected-template-hashes` in the test suite, which

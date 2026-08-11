@@ -60,7 +60,7 @@ under dependencies.
 
 `strand dresser next <flavour> <root>` returns the setup run's ready frontier.
 It passes through the step-view vector owned by
-`millstrand.spools.workflow/ready` without reshaping it.
+`millhouse.spools.workflow/ready` without reshaping it.
 `strand dresser advance <flavour> <root>` completes one ready agent step or
 checkpoint and accepts `--step`, `--choice`, and `--input`. Add
 `--verify` to either command to address the verify run. Verify runs contain only

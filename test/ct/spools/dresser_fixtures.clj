@@ -16,8 +16,8 @@
             [ct.spools.dresser.receipt :as receipt]
             [ct.spools.dresser.target :as target]
             [ct.spools.dresser.templates :as templates]
-            [millstrand.spools.executors.shell :as shell-executor]
-            [millstrand.spools.workflow :as workflow]
+            [millhouse.spools.executors.shell :as shell-executor]
+            [millhouse.spools.workflow :as workflow]
             [millstrand.test.alpha :as t])
   (:import (java.nio.file Files Path)
            (java.nio.file.attribute FileAttribute)
@@ -32,8 +32,12 @@
   {:storage :sqlite-memory
    :spools-edn {:spools {'codethread/dresser
                          {:local/root (.getCanonicalPath (io/file "."))}
-                         'millstrand.spools/workflow
-                         {:local/root (.getCanonicalPath (io/file "../millstrand/spools/workflow"))}}}})
+                         'io.millstrand/millstrand
+                         {:local/root (.getCanonicalPath (io/file "../millstrand"))}
+                         'millhouse.spools/workflow
+                         {:local/root (.getCanonicalPath (io/file "../millhouse.spool/spools/workflow"))}
+                         'millhouse.spools.executors/shell
+                         {:local/root (.getCanonicalPath (io/file "../millhouse.spool/spools/shell-executor"))}}}})
 
 (defn activate-module!
   "Activate a form-authored spool module on a bare test runtime from the JVM
@@ -54,15 +58,16 @@
 (defn activate-workflow!
   "Activate the workflow spool module on a bare test runtime."
   [rt]
-  (activate-module! rt :workflow 'millstrand.spools.workflow
-                    :spools ['millstrand.spools/workflow]))
+  (activate-module! rt :workflow 'millhouse.spools.workflow
+                    :spools ['millhouse.spools/workflow]))
 
 (defn activate-serial-shell!
   "Activate the real shell executor module."
   [rt]
-  (activate-module! rt :shell 'millstrand.spools.executors.shell
+  (activate-module! rt :shell 'millhouse.spools.executors.shell
                     :after [:workflow]
-                    :spools ['millstrand.spools/workflow]))
+                    :spools ['millhouse.spools.executors/shell
+                             'millhouse.spools/workflow]))
 
 (defn activate-dresser-workflows!
   "Activate Dresser's public workflow-definition module."
@@ -175,7 +180,7 @@
   [root title]
   (let [name (fixture-name root)
         params {:name name
-                :millstrand-sha "5790c459e9bb692b5e975f9715df7d5b403feff2"}
+                :millstrand-sha "fb6c9057d594bfa4b5ea8531b9774b5e9a23a4b4"}
         ns-path (str/replace name "-" "_")]
     (case title
       "Write deps.edn"
@@ -319,7 +324,7 @@
     :poll-ms 25
     :check #(do
               (current/with-runtime runtime
-                ((ns-resolve 'millstrand.spools.executors.shell 'scan!)))
+                ((ns-resolve 'millhouse.spools.executors.shell 'scan!)))
               (attention runtime run-id))
     :pred->result identity
     :on-timeout (fn [_]

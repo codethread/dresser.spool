@@ -10,7 +10,7 @@
     "repository": "codethread/millstrand",
     "coordinate": "io.millstrand/millstrand",
     "ref-kind": "sha",
-    "sha": "5790c459e9bb692b5e975f9715df7d5b403feff2"
+    "sha": "fb6c9057d594bfa4b5ea8531b9774b5e9a23a4b4"
   },
   "verification": [
     "make all",

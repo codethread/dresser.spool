@@ -53,7 +53,7 @@ if release["card"] != "MSR-04" or release["repository"] != "codethread/millstran
 if release["coordinate"] != "io.millstrand/millstrand" or release["ref-kind"] != "sha": raise SystemExit("core release must use the Millstrand SHA identity")
 for field in ("sha", "landed-main-commit"):
     if not re.fullmatch(r"[0-9a-f]{40}", release[field]): raise SystemExit("core release " + field + " must be lowercase 40-hex")
-if release["sha"] != release["landed-main-commit"] or release["sha"] != "5790c459e9bb692b5e975f9715df7d5b403feff2": raise SystemExit("core release SHA is not the approved immutable pin")
+if release["sha"] != release["landed-main-commit"] or release["sha"] != "fb6c9057d594bfa4b5ea8531b9774b5e9a23a4b4": raise SystemExit("core release SHA is not the approved immutable pin")
 if not isinstance(release["verification"], list) or not release["verification"]: raise SystemExit("core verification must be a non-empty array")
 print(release["sha"])
 PY
@@ -68,7 +68,7 @@ if missing: raise SystemExit("Dresser release is missing fields: " + ", ".join(m
 if release["card"] != "MSR-09" or release["status"] != "proposed": raise SystemExit("Dresser release must be proposed MSR-09")
 if release["repository"] != "codethread/dresser.spool" or release["origin-repository"] != "codethread/dresser.loom": raise SystemExit("Dresser release must state both card and origin repositories")
 if release["coordinate"] != "ct.spools/dresser" or not re.fullmatch(r"v[1-9][0-9]*", release["proposed-tag"]): raise SystemExit("Dresser release target identity is invalid")
-expected = {"repository": "codethread/millstrand", "coordinate": "io.millstrand/millstrand", "ref-kind": "sha", "sha": "5790c459e9bb692b5e975f9715df7d5b403feff2"}
+expected = {"repository": "codethread/millstrand", "coordinate": "io.millstrand/millstrand", "ref-kind": "sha", "sha": "fb6c9057d594bfa4b5ea8531b9774b5e9a23a4b4"}
 if release["core"] != expected: raise SystemExit("Dresser release core identity is not immutable MSR-04")
 if not isinstance(release["verification"], list) or not release["verification"]: raise SystemExit("Dresser verification must be non-empty")
 for key in ("identity-check", "dresser-lifecycle", "generated-quality", "regeneration", "marker-equivalence"):
@@ -77,6 +77,8 @@ PY
 proposed_tag=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["proposed-tag"])' "$repo_root/release/msr09-release.json")
 
 core_url="https://github.com/codethread/millstrand.git"
+millhouse_url="https://github.com/codethread/millhouse.spool.git"
+millhouse_sha="8f386b09fb8e8506a3c38105dce8e8552142dbf8"
 canonical_url="https://github.com/codethread/dresser.spool.git"
 if [[ "$mode" == "published" ]]; then
   [[ "$tag" == "$proposed_tag" ]] || die "published tag must be the proposed Dresser marker $proposed_tag"
@@ -124,14 +126,14 @@ git clone --quiet "$core_url" "$core_checkout"; git -C "$core_checkout" checkout
 
 printf '%s\n' '{"configFormat":"alpha","name":"dresser-verifier"}' >"$operator/config.json"
 cat >"$operator/spools.edn" <<EOF
-{:spools {millstrand.spools/workflow {:git/url "$core_url" :git/sha "$core_sha" :roots {millstrand.spools/workflow "spools/workflow"}}
+{:spools {millhouse/spools {:git/url "$millhouse_url" :git/sha "$millhouse_sha" :roots {millhouse.spools/workflow "spools/workflow" millhouse.spools.executors/shell "spools/shell-executor"}}
           codethread/dresser {:git/url "$dresser_url" :git/sha "$dresser_sha"}}}
 EOF
 cat >"$operator/init.clj" <<'EOF'
 (require '[millstrand.api.current.alpha :as current] '[millstrand.api.runtime.alpha :as runtime])
 (def runtime (current/runtime))
-(runtime/module! runtime :workflow {:ns 'millstrand.spools.workflow :spools ['millstrand.spools/workflow] :required? true})
-(runtime/module! runtime :shell-executor {:ns 'millstrand.spools.executors.shell :spools ['millstrand.spools/workflow] :after [:workflow] :required? true})
+(runtime/module! runtime :workflow {:ns 'millhouse.spools.workflow :spools ['millhouse.spools/workflow] :required? true})
+(runtime/module! runtime :shell-executor {:ns 'millhouse.spools.executors.shell :spools ['millhouse.spools.executors/shell 'millhouse.spools/workflow] :after [:workflow] :required? true})
 (runtime/module! runtime :dresser-workflows {:ns 'dresser :spools ['codethread/dresser] :after [:workflow] :required? true})
 (runtime/module! runtime :dresser {:ns 'ct.spools.dresser :spools ['codethread/dresser] :after [:workflow :shell-executor :dresser-workflows] :required? true})
 EOF

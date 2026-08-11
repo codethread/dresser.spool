@@ -19,4 +19,7 @@ After approval, sync the operator runtime and activate `ct.spools.<name>`.
 
 ## Development
 
-Local tests require an immutable Millstrand checkout at sibling `../millstrand` because the test alias uses `../millstrand/spools/workflow/src`; CI creates that layout.
+The generated test alias resolves the Millstrand core and Millhouse Workflow
+root by immutable Git SHA. For local development, a repository may add a
+gitignored dependency overlay pointing at sibling Millstrand and Millhouse
+checkouts; published and CI dependencies remain SHA-pinned.

@@ -15,7 +15,7 @@
             [ct.spools.dresser.target :as target]
             [ct.spools.dresser.templates :as templates]
             [ct.spools.dresser.workflows :as dresser-workflows]
-            [millstrand.spools.workflow :as workflow])
+            [millhouse.spools.workflow :as workflow])
   (:import (java.time LocalDate)))
 
 (def ^:dynamic *current-date*
@@ -188,7 +188,7 @@
     ((if verify? target/verify-run-id target/run-id) flavour root)))
 
 (defn ready
-  "Return `millstrand.spools.workflow/ready`'s engine-owned frontier unchanged for a
+  "Return `millhouse.spools.workflow/ready`'s engine-owned frontier unchanged for a
   setup run, or verify run when verify? is true."
   [flavour root verify?]
   (spool/require-valid! ::specs/ready-input

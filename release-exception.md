@@ -16,7 +16,7 @@ publication instruction.
   to `millstrand.*`, `io.millstrand/millstrand`, and `.millstrand`/`.ms`.
 - Core input: `release/msr04-release.json`, an immutable SHA record for
   `codethread/millstrand` at
-  `5790c459e9bb692b5e975f9715df7d5b403feff2`. No core tag, `:git/tag`, or
+  `fb6c9057d594bfa4b5ea8531b9774b5e9a23a4b4`. No core tag, `:git/tag`, or
   `v1` core marker is used.
 - Generated repositories consume that SHA in `deps.edn` and in the CI
   workflow's checkout `ref`; `:local/root` is rejected from generated release

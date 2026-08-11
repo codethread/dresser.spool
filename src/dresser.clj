@@ -6,7 +6,7 @@
   forms here preserves the public names while keeping workflow definitions in
   Millstrand's owner-complete authoring grammar."
   (:require [ct.spools.dresser.workflows :as workflows]
-            [millstrand.spools.workflow :as workflow]))
+            [millhouse.spools.workflow :as workflow]))
 
 (workflow/defworkflow spool-repo
   "Converge every spool-repo convention aspect on a target root."
