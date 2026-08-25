@@ -8,11 +8,7 @@
                        :git/sha "fb6c9057d594bfa4b5ea8531b9774b5e9a23a4b4"}
                       millhouse.spools/workflow
                       {:git/url "https://github.com/codethread/millhouse.spool.git"
-                       :git/sha "8f386b09fb8e8506a3c38105dce8e8552142dbf8"
-                       :deps/root "spools/workflow"}
-                      millhouse.spools.executors/shell
-                      {:git/url "https://github.com/codethread/millhouse.spool.git"
-                       :git/sha "8f386b09fb8e8506a3c38105dce8e8552142dbf8"
-                       :deps/root "spools/shell-executor"}}
+                       :git/sha "f1cdda3b46706b186f547251d285791be650d232"
+                       :deps/root "spools/workflow"}}
          :jvm-opts ["--enable-native-access=ALL-UNNAMED"]
          :main-opts ["-m" "ct.spools.<name>-test"]}}}

@@ -78,7 +78,7 @@ proposed_tag=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1], en
 
 core_url="https://github.com/codethread/millstrand.git"
 millhouse_url="https://github.com/codethread/millhouse.spool.git"
-millhouse_sha="8f386b09fb8e8506a3c38105dce8e8552142dbf8"
+millhouse_sha="f1cdda3b46706b186f547251d285791be650d232"
 canonical_url="https://github.com/codethread/dresser.spool.git"
 if [[ "$mode" == "published" ]]; then
   [[ "$tag" == "$proposed_tag" ]] || die "published tag must be the proposed Dresser marker $proposed_tag"
@@ -126,14 +126,14 @@ git clone --quiet "$core_url" "$core_checkout"; git -C "$core_checkout" checkout
 
 printf '%s\n' '{"configFormat":"alpha","name":"dresser-verifier"}' >"$operator/config.json"
 cat >"$operator/spools.edn" <<EOF
-{:spools {millhouse/spools {:git/url "$millhouse_url" :git/sha "$millhouse_sha" :roots {millhouse.spools/workflow "spools/workflow" millhouse.spools.executors/shell "spools/shell-executor"}}
+{:spools {millhouse/spools {:git/url "$millhouse_url" :git/sha "$millhouse_sha" :roots {millhouse.spools/workflow "spools/workflow"}}
           codethread/dresser {:git/url "$dresser_url" :git/sha "$dresser_sha"}}}
 EOF
 cat >"$operator/init.clj" <<'EOF'
 (require '[millstrand.api.current.alpha :as current] '[millstrand.api.runtime.alpha :as runtime])
 (def runtime (current/runtime))
 (runtime/module! runtime :workflow {:ns 'millhouse.spools.workflow :spools ['millhouse.spools/workflow] :required? true})
-(runtime/module! runtime :shell-executor {:ns 'millhouse.spools.executors.shell :spools ['millhouse.spools.executors/shell 'millhouse.spools/workflow] :after [:workflow] :required? true})
+(runtime/module! runtime :shell-executor {:ns 'millhouse.spools.workflow.spool :spools ['millhouse.spools/workflow] :after [:workflow] :required? true})
 (runtime/module! runtime :dresser-workflows {:ns 'dresser :spools ['codethread/dresser] :after [:workflow] :required? true})
 (runtime/module! runtime :dresser {:ns 'ct.spools.dresser :spools ['codethread/dresser] :after [:workflow :shell-executor :dresser-workflows] :required? true})
 EOF

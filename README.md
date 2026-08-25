@@ -37,7 +37,7 @@ by its immutable SHA and can use:
 
   millhouse/spools
   {:git/url "https://github.com/codethread/millhouse.spool.git"
-   :git/sha "8f386b09fb8e8506a3c38105dce8e8552142dbf8"
+   :git/sha "f1cdda3b46706b186f547251d285791be650d232"
    :roots {millhouse.spools/workflow "spools/workflow"}}
 
   codethread/dresser
@@ -68,9 +68,8 @@ target. Startup config therefore declares only the source and world policy:
                   :required? true})
 
 (runtime/module! runtime :shell-executor
-                 {:ns 'millhouse.spools.executors.shell
-                  :spools ['millhouse.spools.executors/shell
-                           'millhouse.spools/workflow]
+                 {:ns 'millhouse.spools.workflow.spool
+                  :spools ['millhouse.spools/workflow]
                   :after [:workflow]
                   :required? true})
 

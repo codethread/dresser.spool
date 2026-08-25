@@ -35,9 +35,7 @@
                          'io.millstrand/millstrand
                          {:local/root (.getCanonicalPath (io/file "../millstrand"))}
                          'millhouse.spools/workflow
-                         {:local/root (.getCanonicalPath (io/file "../millhouse.spool/spools/workflow"))}
-                         'millhouse.spools.executors/shell
-                         {:local/root (.getCanonicalPath (io/file "../millhouse.spool/spools/shell-executor"))}}}})
+                         {:local/root (.getCanonicalPath (io/file "../millhouse.spool/spools/workflow"))}}}})
 
 (defn activate-module!
   "Activate a form-authored spool module on a bare test runtime from the JVM
@@ -64,10 +62,9 @@
 (defn activate-serial-shell!
   "Activate the real shell executor module."
   [rt]
-  (activate-module! rt :shell 'millhouse.spools.executors.shell
+  (activate-module! rt :shell 'millhouse.spools.workflow.spool
                     :after [:workflow]
-                    :spools ['millhouse.spools.executors/shell
-                             'millhouse.spools/workflow]))
+                    :spools ['millhouse.spools/workflow]))
 
 (defn activate-dresser-workflows!
   "Activate Dresser's public workflow-definition module."
