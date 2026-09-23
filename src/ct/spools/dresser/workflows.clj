@@ -189,30 +189,67 @@
              (gate-steps entry gate-dependency attributes))))))
 
 (def spool-repo-repo-skeleton-workflow
+  "Call-only definition for a spool repository's deps, source, tests and README.
+
+  Includes gitignore setup; inspect and resolve owned-file conflicts before
+  setup and shell verification. Accepts `:root` and optional `:verify-only`."
   (aspect-workflow "spool-repo/repo-skeleton"))
 
 (def spool-repo-millstrand-workspace-workflow
+  "Call-only definition for a spool repository's minimal Millstrand bootstrap.
+
+  Converges the workspace quartet under `:root`; optional `:verify-only` skips
+  inspection, conflict resolution and setup, leaving the file gate."
   (aspect-workflow "spool-repo/millstrand-workspace"))
 
 (def spool-repo-agent-docs-workflow
+  "Call-only definition for repository-root AGENTS.md guidance.
+
+  Resolves owned-file conflicts before setup and verification at `:root`.
+  Optional `:verify-only` retains only the agent-guidance gate."
   (aspect-workflow "spool-repo/agent-docs"))
 
 (def spool-repo-quality-workflow
+  "Call-only definition for repository quality configuration and Make targets.
+
+  Converges config, dependency aliases and Makefile fragments at `:root`, then
+  checks formatting and lint. Optional `:verify-only` runs only those gates."
   (aspect-workflow "spool-repo/quality"))
 
 (def spool-repo-docs-workflow
+  "Call-only definition for the documentation pipeline and symlink projection.
+
+  At `:root`, sets up the pipeline before linking its pages, then verifies files,
+  targets and the strict site build. Optional `:verify-only` runs only gates."
   (aspect-workflow "spool-repo/docs"))
 
 (def spool-repo-ci-workflow
+  "Call-only definition for GitHub quality and Pages workflow files.
+
+  At `:root`, resolves owned-file conflicts and writes workflows before recording
+  the external Pages decision. Gates check local structure, not Pages settings.
+  Optional `:verify-only` skips setup and both decision checkpoints."
   (aspect-workflow "spool-repo/ci"))
 
 (def millstrand-dir-workspace-workflow
+  "Call-only definition for a layered .millstrand workspace under `:root`.
+
+  Resolves workspace-file conflicts before setup, then checks the quartet and
+  startup header. Optional `:verify-only` runs only gates; no host-root ownership."
   (aspect-workflow "millstrand-dir/workspace"))
 
 (def millstrand-dir-quality-workflow
+  "Call-only definition for workspace-local dependency aliases and Make targets.
+
+  Owns tooling inside `:root`'s .millstrand directory, not host-root files.
+  Optional `:verify-only` skips setup and runs workspace formatting and lint."
   (aspect-workflow "millstrand-dir/quality"))
 
 (def millstrand-dir-agent-docs-workflow
+  "Call-only definition for workspace-local AGENTS.md and CLAUDE.md guidance.
+
+  Resolves conflicts and converges both files inside `:root`'s .millstrand
+  directory. Optional `:verify-only` retains only the agent-docs file gate."
   (aspect-workflow "millstrand-dir/agent-docs"))
 
 (defn- call-id [aspect-key]
@@ -263,12 +300,24 @@
              calls)))))
 
 (def spool-repo-workflow
+  "Start-only umbrella for every spool-repo aspect in dependency order.
+
+  Accepts `:root` and optional `:verify-only`, passed to its ordered aspect calls.
+  Use `flavour-workflow` to build a selected-aspect umbrella; stamping is separate."
   (flavour-workflow "spool-repo"))
 
 (def millstrand-dir-workflow
+  "Start-only umbrella for every millstrand-dir aspect in dependency order.
+
+  Accepts `:root` and optional `:verify-only`; ordered calls own only workspace
+  files. Use `flavour-workflow` for a selection; stamping remains separate."
   (flavour-workflow "millstrand-dir"))
 
 (def abort-workflow
+  "Continuation-only definition that records the supplied `:reason` and stops.
+
+  Conflict and Pages abort choices route here instead of resuming remaining
+  setup or gates. Completing the record step terminates the run without stamping."
   (workflow/static-definition
    "Record why dresser convention convergence was aborted, and stop."
    {:entrypoints #{:continue}

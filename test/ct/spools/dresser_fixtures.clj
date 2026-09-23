@@ -13,6 +13,7 @@
             [millstrand.api.weaver.alpha :as weaver]
             [millstrand.core.weaver.runtime :as weaver-runtime]
             [ct.spools.dresser :as dresser]
+            [ct.spools.dresser-process-fixture :as process-fixture]
             [ct.spools.dresser.receipt :as receipt]
             [ct.spools.dresser.target :as target]
             [ct.spools.dresser.templates :as templates]
@@ -27,26 +28,22 @@
 (def ^:private attention-timeout-ms 30000)
 
 (defn world-options
-  "Return disposable-world options that approve this checkout as a spool root."
+  "Return disposable-world dependencies from the active test classpath.
+
+  Published tests must activate the pinned sources, not local sibling checkouts."
   []
-  {:storage :sqlite-memory
-   :spools-edn {:spools {'codethread/dresser
-                         {:local/root (.getCanonicalPath (io/file "."))}
-                         'io.millstrand/millstrand
-                         {:local/root (.getCanonicalPath (io/file "../millstrand"))}
-                         'millhouse.spools/workflow
-                         {:local/root (.getCanonicalPath (io/file "../millhouse.spool/spools/workflow"))}}}})
+  {:deps-edn (pr-str
+              {:deps
+               {'codethread/dresser
+                {:local/root (str (t/spool-checkout-root "ct/spools/dresser.clj"))}
+                'millhouse.spools/workflow
+                {:local/root (str (t/spool-checkout-root "millhouse/spools/workflow.clj"))}}})})
 
 (defn activate-module!
-  "Activate a form-authored spool module on a bare test runtime from the JVM
-  source target. Production carries `:spools` guards instead. Throws with the full
-  refresh result unless the module's outcome is applied or unchanged, so a
-  fixture failure names the refusal instead of cascading into unrelated
-  assertions. Returns the refresh result."
-  [rt key ns-sym & {:keys [after spools]}]
+  "Activate a source-backed module; reject refused outcomes with full evidence."
+  [rt key ns-sym & {:keys [after]}]
   (let [result (runtime/module! rt key (cond-> {:ns ns-sym}
-                                         after (assoc :after after)
-                                         spools (assoc :spools spools)))
+                                         after (assoc :after after)))
         status (get-in result [:modules key :status])]
     (when-not (contains? #{:applied :unchanged} status)
       (throw (ex-info "Spool module activation failed"
@@ -56,30 +53,26 @@
 (defn activate-workflow!
   "Activate the workflow spool module on a bare test runtime."
   [rt]
-  (activate-module! rt :workflow 'millhouse.spools.workflow
-                    :spools ['millhouse.spools/workflow]))
+  (activate-module! rt :workflow 'millhouse.spools.workflow))
 
 (defn activate-serial-shell!
   "Activate the real shell executor module."
   [rt]
   (activate-module! rt :shell 'millhouse.spools.workflow.spool
-                    :after [:workflow]
-                    :spools ['millhouse.spools/workflow]))
+                    :after [:workflow]))
 
 (defn activate-dresser-workflows!
   "Activate Dresser's public workflow-definition module."
   [rt]
   (activate-module! rt :dresser-workflows 'dresser
-                    :after [:workflow]
-                    :spools ['codethread/dresser]))
+                    :after [:workflow]))
 
 (defn activate-dresser!
-  "Activate Dresser's CLI and vocabulary module after its definitions."
+  "Activate Dresser's CLI and prerequisite check after its definitions."
   [rt]
   (activate-dresser-workflows! rt)
   (activate-module! rt :dresser 'ct.spools.dresser
-                    :after [:workflow :dresser-workflows]
-                    :spools ['codethread/dresser]))
+                    :after [:workflow :dresser-workflows]))
 
 (defn with-dresser-runtime
   "Run f in a disposable weaver world with dresser and either real or inert shell.
@@ -88,17 +81,19 @@
   ([f]
    (with-dresser-runtime {:real-shell? true} f))
   ([{:keys [real-shell?] :or {real-shell? true}} f]
-   (t/with-weaver-world [ctx (world-options)]
-     (weaver-runtime/with-runtime-binding
-       (:runtime ctx)
-       #(let [rt (:runtime ctx)]
-          (activate-workflow! rt)
-          (if real-shell?
-            (activate-serial-shell! rt)
-            (workflow/register-executor! :shell (constantly nil)))
-          (activate-dresser! rt)
-          (binding [dresser/*current-date* (LocalDate/of 2026 7 14)]
-            (f rt (:config-dir ctx))))))))
+   (process-fixture/with-process-custody
+     (fn []
+       (t/with-weaver-world [ctx (world-options)]
+         (weaver-runtime/with-runtime-binding
+           (:runtime ctx)
+           #(let [rt (:runtime ctx)]
+              (activate-workflow! rt)
+              (if real-shell?
+                (activate-serial-shell! rt)
+                (workflow/register-executor! :shell (constantly nil)))
+              (activate-dresser! rt)
+              (binding [dresser/*current-date* (LocalDate/of 2026 7 14)]
+                (f rt (:config-dir ctx))))))))))
 
 (defn temp-directory ^Path []
   (Files/createTempDirectory "dresser-e2e-" (make-array FileAttribute 0)))

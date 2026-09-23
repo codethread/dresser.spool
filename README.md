@@ -3,14 +3,14 @@
 `ct.spools.dresser` converges repository conventions through versioned Millstrand workflows. An operator drives setup work against a target git root; shell gates verify the result; an explicit stamp writes the checked-in receipt beside the selected workspace marker at `.millstrand/conventions.edn` or `.ms/conventions.edn`. The authoritative selection rule is in [Receipt, plan, verify, and stamp](./dresser.md#receipt-plan-verify-and-stamp).
 
 The spool is trusted Clojure code for a live Millstrand weaver. It has no
-`spool.edn` manifest: approve source in `spools.edn` or `spools.local.edn`, then
+`spool.edn` manifest: declare dependencies in workspace `deps.edn` or `deps.local.edn`, then
 activate its modules explicitly from `init.clj` or a trusted REPL. The full
 behavior contract is in [dresser.md](./dresser.md).
 
 ## Prerequisites
 
 - A Millstrand checkout and a live weaver configured from an operator workspace.
-- Explicit approval of the Millhouse Workflow root `millhouse.spools/workflow`.
+- The Millhouse Workflow dependency `millhouse.spools/workflow`.
 - A 40-hex git SHA pin for this repository, or a local development override.
 - The shell executor namespace. It ships on the workflow spool classpath, needs
   no separate source approval, and is activation-only. Activate it after the
@@ -26,29 +26,27 @@ on that repository.
 
 ## Dependency information
 
-Approve every source spool explicitly. A published workspace pins Millstrand
-by its immutable SHA and can use:
+Declare spool dependencies explicitly. Mill supplies the reserved
+`io.millstrand/millstrand` dependency; do not declare it in workspace deps.
+This revision is tested against core `17e4c2c9a2668cff4e98124d659c0a55395301d8`.
+A workspace `deps.edn` can use:
 
 ```clojure
-{:spools
- {io.millstrand/millstrand
-  {:git/url "https://github.com/codethread/millstrand.git"
-   :git/sha "fb6c9057d594bfa4b5ea8531b9774b5e9a23a4b4"}
-
-  millhouse/spools
+{:deps
+ {millhouse.spools/workflow
   {:git/url "https://github.com/codethread/millhouse.spool.git"
-   :git/sha "f1cdda3b46706b186f547251d285791be650d232"
-   :roots {millhouse.spools/workflow "spools/workflow"}}
+   :git/sha "8a66ab98030460ec7c41f35c418971a17a4cec71"
+   :deps/root "spools/workflow"}
 
   codethread/dresser
   {:git/url "git@github.com:codethread/dresser.spool.git"
    :git/sha "<40-hex-sha-for-the-approved-commit>"}}}
 ```
 
-For local dresser development, add a gitignored `spools.local.edn` overlay:
+For local dresser development, add a gitignored `deps.local.edn` overlay:
 
 ```clojure
-{:spools
+{:deps
  {codethread/dresser
   {:local/root "/Users/you/dev/dresser.spool"}}}
 ```
@@ -56,39 +54,35 @@ For local dresser development, add a gitignored `spools.local.edn` overlay:
 ## Activation
 
 Declare the workflow engine, the classpath shell executor, Dresser's workflow
-definitions, and its CLI/vocabulary module in the workspace's `init.clj`,
-ordered by `:after` edges. These are form-authored modules: `defworkflow`,
-`defop`, and `defseed` collect their declarations from the declared source
-target. Startup config therefore declares only the source and world policy:
+definitions, and its CLI module in the workspace's `init.clj`,
+ordered by `:after` edges. Definitions are inert until selected: Dresser uses
+`defworkflow` plus `use-workflow!`, and `defop!`/`defseed!` to define and select
+its CLI and prerequisite check. Startup config declares source and world policy:
 
 ```clojure
 (runtime/module! runtime :workflow
                  {:ns 'millhouse.spools.workflow
-                  :spools ['millhouse.spools/workflow]
                   :required? true})
 
 (runtime/module! runtime :shell-executor
                  {:ns 'millhouse.spools.workflow.spool
-                  :spools ['millhouse.spools/workflow]
                   :after [:workflow]
                   :required? true})
 
 (runtime/module! runtime :dresser-workflows
                  {:ns 'dresser
-                  :spools ['codethread/dresser]
                   :after [:workflow]
                   :required? true})
 
 (runtime/module! runtime :dresser
                  {:ns 'ct.spools.dresser
-                  :spools ['codethread/dresser]
                   :after [:workflow :shell-executor :dresser-workflows]
                   :required? true})
 ```
 
 Dresser's workflow module publishes its static definitions, while its CLI
-module publishes the `dresser` op and seeds the `dresser/*` vocabulary. The
-seed refuses activation when no `:shell` executor is registered. Refreshing a
+module publishes the `dresser` op. Its prerequisite seed refuses activation
+when no `:shell` executor is registered. Refreshing a
 module without its forms retracts that module's entries by omission.
 
 The published names are `:<flavour>` for the two umbrellas (entrypoint
@@ -99,8 +93,8 @@ value a Var holds, so `strand workflow show <name>` answers what a name means
 without running anything. Publication refuses a partition whose definitions
 call or route to a name it does not contain.
 
-The shell executor is present through the approved workflow root; omitting a
-separate `:spools` guard on its activation is intentional.
+The shell executor is present through the Workflow dependency. Current module
+activation takes a source target and ordering, not a `:spools` guard.
 
 ## Quickstart
 
@@ -171,6 +165,19 @@ PATH=/opt/homebrew/opt/openjdk/bin:$PATH make fmt-check lint test
 
 The repository's `.millstrand/init.clj` remains the minimal batteries bootstrap.
 Dresser is not activated in its own workspace.
+
+### Workflow authoring
+
+Start with the shared [Workflow cookbook](https://github.com/codethread/millhouse.spool/blob/main/spools/workflow/workflow.cookbook.md).
+Dresser's aspect registry supplies step-local work; the generator declares
+linear dependencies and ordered umbrella calls. Keep owned-file conflicts and
+external Pages configuration as real decisions, not extra acknowledgements.
+
+Instructions render at pour, not when a step becomes ready. Later results need
+explicit durable reads or fresh continuation params; completing a step with
+context does not rewrite later instructions. Split work at owner, output, wait,
+authorization or recovery boundaries, not at every verb. A human checkpoint
+label records coordination intent, not authenticated user approval.
 
 Canonical template content lives under `resources/ct/spools/dresser/templates/`,
 one file per key in `ct.spools.dresser.templates/templates`, at the key's own

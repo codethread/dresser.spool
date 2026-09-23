@@ -19,10 +19,10 @@
   :equivalence-published {:extra-paths ["test"]
                           :extra-deps {io.millstrand/millstrand
                                        {:git/url "https://github.com/codethread/millstrand.git"
-                                        :git/sha "fb6c9057d594bfa4b5ea8531b9774b5e9a23a4b4"}
+                                        :git/sha "17e4c2c9a2668cff4e98124d659c0a55395301d8"}
                                        millhouse.spools/workflow
                                        {:git/url "https://github.com/codethread/millhouse.spool.git"
-                                        :git/sha "f1cdda3b46706b186f547251d285791be650d232"
+                                        :git/sha "8a66ab98030460ec7c41f35c418971a17a4cec71"
                                         :deps/root "spools/workflow"}}
                           :jvm-opts ["--enable-native-access=ALL-UNNAMED"]
                           :main-opts ["-m" "ct.spools.dresser-test"]}}}

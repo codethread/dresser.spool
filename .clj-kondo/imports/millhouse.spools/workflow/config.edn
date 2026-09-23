@@ -1,9 +1,37 @@
 {:lint-as
  {millhouse.spools.workflow/defworkflow clojure.core/def
-  millhouse.spools.workflow/defexecutor clojure.core/def}
+  millhouse.spools.workflow/defworkflow! clojure.core/def
+  millhouse.spools.workflow/defexecutor clojure.core/def
+  millhouse.spools.workflow/defexecutor! clojure.core/def}
  :hooks
  {:analyze-call
   {millhouse.spools.workflow/defworkflow
    hooks.millhouse.spools.workflow/defworkflow
+   millhouse.spools.workflow/defworkflow!
+   hooks.millhouse.spools.workflow/defworkflow
    millhouse.spools.workflow/defexecutor
-   hooks.millhouse.spools.workflow/defexecutor}}}
+   hooks.millhouse.spools.workflow/defexecutor
+   millhouse.spools.workflow/defexecutor!
+   hooks.millhouse.spools.workflow/defexecutor
+   millhouse.spools.workflow/use-workflow!
+   hooks.millstrand/use-vars
+   millhouse.spools.workflow/use-executor!
+   hooks.millstrand/use-vars}}
+ :linters
+ {:unresolved-var
+  {:exclude
+   [millhouse.spools.workflow/defworkflow
+    millhouse.spools.workflow/defworkflow!
+    millhouse.spools.workflow/defexecutor
+    millhouse.spools.workflow/defexecutor!
+    millhouse.spools.workflow/use-workflow!
+    millhouse.spools.workflow/use-executor!
+    millhouse.spools.executors.code/code-stalled?
+    millhouse.spools.executors.code/stalled-code-gates
+    millhouse.spools.executors.code/code-engine
+    millhouse.spools.executors.shell/shell-stalled?
+    millhouse.spools.executors.shell/stalled-shell-gates
+    millhouse.spools.executors.shell/shell-pool
+    millhouse.spools.executors.shell/shell-handler
+    millhouse.spools.executors.shell/shell-attempts
+    millhouse.spools.millstrand-workflows/publish-spool-kondo]}}}

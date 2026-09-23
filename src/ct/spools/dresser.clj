@@ -8,7 +8,6 @@
             [millstrand.api.lifecycle.alpha :as lifecycle]
             [millstrand.api.millstrand.alpha :as millstrand]
             [millstrand.api.spool.alpha :as spool]
-            [millstrand.api.vocab.alpha :as vocab]
             [ct.spools.dresser.aspects :as aspects]
             [ct.spools.dresser.receipt :as receipt]
             [ct.spools.dresser.specs :as specs]
@@ -205,12 +204,11 @@
   (spool/reject-unknown-keys! "dresser advance"
                               #{:choice :input :step}
                               opts)
-  ;; The engine publishes a caller-supplied :by, but dresser deliberately pins it
-  ;; and exposes no --by. `advance!` acts on any ready step, gates included, so a
-  ;; caller-chosen :by would let `advance --step <gate-id> --by shell` forge the
-  ;; workflow/outcome-by = "shell" evidence stamp! trusts.
+  ;; Driver attribution is distinct from trusted executor provenance. Dresser
+  ;; exposes neither an executor override nor arbitrary completion attributes;
+  ;; advancing a gate manually cannot supply the shell evidence stamp! requires.
   (workflow/advance! (addressed-run-id flavour root verify?)
-                     (assoc opts :by "dresser")))
+                     (assoc opts :by-identity "dresser")))
 
 (defn- keywordize-input [input]
   (let [input (or input {})
@@ -286,10 +284,10 @@
                  (not= "closed" (:state gate))
                  (conj {:violation :gate-not-closed :gate gate-id :state (:state gate)})
 
-                 (not= "shell" (attr gate :workflow/outcome-by))
-                 (conj {:violation :outcome-by
+                 (not= "shell" (attr gate :workflow/executor))
+                 (conj {:violation :executor
                         :gate gate-id
-                        :actual (attr gate :workflow/outcome-by)
+                        :actual (attr gate :workflow/executor)
                         :expected "shell"})
 
                  (not= 0 (attr gate :shell/exit-code))
@@ -405,7 +403,7 @@
   "Registration metadata for the `dresser` op's authoring form."
   {:arg-spec dresser-arg-spec})
 
-(millstrand/defop dresser
+(millstrand/defop! dresser
   "Inspect and converge repository conventions."
   dresser-op-options
   [request]
@@ -438,15 +436,6 @@
                    {:subcommand subcommand
                     :allowed (vec (sort allowed))}))))
 
-(def ^:private dresser-vocab
-  "The `dresser/*` attribute-namespace declaration reconcile seeds."
-  {:kind :attr-namespace
-   :name "dresser"
-   :owner :millstrand/spools-dresser
-   :keys ["dresser/flavour" "dresser/aspect" "dresser/version" "dresser/root"
-          "dresser/gate-id"]
-   :doc "Dresser target and aspect identity attributes on workflow roots and steps."})
-
 (defn- require-shell-executor!
   "Fail loudly unless a `:shell` workflow executor is registered.
 
@@ -462,13 +451,12 @@
                    {:prerequisite :shell
                     :executors (set (keys executors))}))))
 
-(defn seed-dresser-vocabulary!
-  "Assert Dresser's executor prerequisite and seed its process-lifetime vocab."
-  [{:keys [runtime]}]
+(defn check-prerequisites!
+  "Refuse activation unless Dresser's shell workflow executor is registered."
+  [_ctx]
   (require-shell-executor!)
-  (vocab/declare! runtime dresser-vocab)
-  {:seeded :dresser})
+  {:checked :shell})
 
-(lifecycle/defseed dresser-vocabulary
-  "Seed Dresser's process-lifetime vocabulary after its forms publish."
-  {:apply 'ct.spools.dresser/seed-dresser-vocabulary!})
+(lifecycle/defseed! dresser-prerequisites
+  "Check Dresser's executor prerequisite after its forms publish."
+  {:apply 'ct.spools.dresser/check-prerequisites!})
