@@ -81,3 +81,17 @@
   {:entrypoints #{:call} :param-spec :ct.spools.dresser.specs/aspect-workflow-input
    :defaults {:verify-only false}}
   workflows/millstrand-dir-agent-docs-workflow)
+
+(workflow/use-workflow!
+ dresser/spool-repo
+ dresser/millstrand-dir
+ dresser/abort
+ dresser/spool-repo.repo-skeleton
+ dresser/spool-repo.millstrand-workspace
+ dresser/spool-repo.agent-docs
+ dresser/spool-repo.quality
+ dresser/spool-repo.docs
+ dresser/spool-repo.ci
+ dresser/millstrand-dir.workspace
+ dresser/millstrand-dir.quality
+ dresser/millstrand-dir.agent-docs)

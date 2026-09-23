@@ -5,17 +5,18 @@
   runs against a disposable weaver world."
   (:require [clojure.java.io :as io]
             [clojure.java.shell :as sh]
+            [clojure.set :as set]
             [clojure.string :as str]
             [clojure.test :refer [deftest is run-tests testing]]
             [millstrand.api.runtime.alpha :as runtime]
             [millstrand.api.spool.alpha :as spool]
-            [millstrand.api.vocab.alpha :as vocab]
             [millstrand.api.weaver.alpha :as weaver]
             [millstrand.core.weaver.runtime :as weaver-runtime]
             [ct.spools.dresser :as dresser]
             [ct.spools.dresser.aspects :as aspects]
             [ct.spools.dresser-edges-test]
             [ct.spools.dresser-fixtures :as fixtures]
+            [ct.spools.dresser-process-fixture :as process-fixture]
             [ct.spools.dresser.receipt :as receipt]
             [ct.spools.dresser.specs :as specs]
             [ct.spools.dresser.target :as target]
@@ -29,19 +30,21 @@
            (java.security MessageDigest)))
 
 (deftest dresser-exports-form-authored-lifecycle-surface
-  (is (ifn? (ns-resolve 'ct.spools.dresser 'dresser-op)))
-  (is (ifn? dresser/seed-dresser-vocabulary!))
+  (is (ifn? (ns-resolve 'ct.spools.dresser 'dresser)))
+  (is (ifn? dresser/check-prerequisites!))
   (is (nil? (ns-resolve 'ct.spools.dresser 'contribute)))
   (is (nil? (ns-resolve 'ct.spools.dresser 'reconcile))))
 
 (defn- with-runtime [f]
-  (t/with-weaver-world [ctx (fixtures/world-options)]
-    (weaver-runtime/with-runtime-binding
-      (:runtime ctx)
-      #(do
-         (fixtures/activate-workflow! (:runtime ctx))
-         (fixtures/activate-serial-shell! (:runtime ctx))
-         (f (:runtime ctx) (:config-dir ctx))))))
+  (process-fixture/with-process-custody
+    (fn []
+      (t/with-weaver-world [ctx (fixtures/world-options)]
+        (weaver-runtime/with-runtime-binding
+          (:runtime ctx)
+          #(do
+             (fixtures/activate-workflow! (:runtime ctx))
+             (fixtures/activate-serial-shell! (:runtime ctx))
+             (f (:runtime ctx) (:config-dir ctx))))))))
 
 (def expected-template-names
   #{"millstrand/config.json"
@@ -752,7 +755,7 @@
 
 (deftest unsupported-dresser-subcommand-fails-with-alternatives
   (let [exception (thrown-exception
-                   #((ns-resolve 'ct.spools.dresser 'dresser-op)
+                   #((ns-resolve 'ct.spools.dresser 'dresser)
                      {:op/args {:subcommand ["explode"]}}))
         data (ex-data exception)]
     (is (= "Unsupported dresser subcommand" (ex-message exception)))
@@ -771,14 +774,12 @@
 (deftest activation-is-idempotent-and-declares-the-complete-op-surface
   (with-runtime
     (fn [runtime _]
-      (let [first-activation (fixtures/activate-dresser! runtime)
+      (let [existing (set (keys (workflow/workflows)))
+            first-activation (fixtures/activate-dresser! runtime)
             second-activation (fixtures/activate-dresser! runtime)
             op (weaver/resolve-op runtime 'dresser)
             subcommands (get-in op [:arg-spec :subcommands])
-            help (weaver/op! runtime 'help ["dresser"])
-            declaration (->> (vocab/declarations runtime {:kind :attr-namespace})
-                             (filter #(= "dresser" (:name %)))
-                             first)]
+            help (weaver/op! runtime 'help ["dresser"])]
         (is (= :applied (get-in first-activation [:modules :dresser :status])))
         (is (= :unchanged (get-in second-activation [:modules :dresser :status])))
         (is (= #{"about" "aspects" "template" "plan" "start" "verify"
@@ -792,20 +793,18 @@
                 "advance" :mutating "stamp" :mutating}
                (update-vals subcommands :hook-class)))
         (is (every? #(= :standard (:deadline-class %)) (vals subcommands)))
-        (is (= ["dresser/flavour" "dresser/aspect" "dresser/version" "dresser/root"
-                "dresser/gate-id"]
-               (:keys declaration)))
         (is (= (set (keys dresser-workflows/workflow-definitions))
-               (set (keys (workflow/workflows)))))))))
+               (set/difference (set (keys (workflow/workflows))) existing)))))))
 
 (deftest form-authored-modules-publish-owner-complete-partitions
   (with-runtime
     (fn [runtime _]
-      (fixtures/activate-dresser! runtime)
-      (is (= (set (keys dresser-workflows/workflow-definitions))
-             (set (keys (workflow/workflows)))))
-      (is (= 'ct.spools.dresser/dresser-op
-             (:fn (weaver/resolve-op runtime 'dresser)))))))
+      (let [existing (set (keys (workflow/workflows)))]
+        (fixtures/activate-dresser! runtime)
+        (is (= (set (keys dresser-workflows/workflow-definitions))
+               (set/difference (set (keys (workflow/workflows))) existing)))
+        (is (= 'ct.spools.dresser/dresser
+               (:fn (weaver/resolve-op runtime 'dresser))))))))
 
 (defn- with-runtime-without-executor [f]
   (t/with-weaver-world [ctx (fixtures/world-options)]
@@ -830,12 +829,13 @@
       (with-runtime-without-executor
         (fn [runtime]
           (workflow/register-executor! :shell (constantly nil))
-          (fixtures/activate-dresser! runtime)
-          (weaver/op! runtime 'dresser
-                      ["start" "millstrand-dir" (str root)
-                       "--aspects" "millstrand-dir/agent-docs"])
-          (is (= (set (keys dresser-workflows/workflow-definitions))
-                 (set (keys (workflow/workflows)))))
+          (let [existing (set (keys (workflow/workflows)))]
+            (fixtures/activate-dresser! runtime)
+            (weaver/op! runtime 'dresser
+                        ["start" "millstrand-dir" (str root)
+                         "--aspects" "millstrand-dir/agent-docs"])
+            (is (= (set (keys dresser-workflows/workflow-definitions))
+                   (set/difference (set (keys (workflow/workflows))) existing))))
           (let [result (runtime/refresh! runtime)]
             (is (= :removed (get-in result [:modules :dresser :status])))
             (is (= :removed (get-in result [:modules :dresser-workflows :status]))))
@@ -1012,7 +1012,7 @@
           (is (= #{"spool-repo/millstrand-workspace" "spool-repo/agent-docs"}
                  (set (map #(spool/attr-get % :dresser/aspect) gates))))
           (is (every? #(= "closed" (:state %)) gates))
-          (is (every? #(= "shell" (spool/attr-get % :workflow/outcome-by)) gates))
+          (is (every? #(= "shell" (spool/attr-get % :workflow/executor)) gates))
           (is (every? #(zero? (spool/attr-get % :shell/exit-code)) gates))
           (is (every? #(nil? (spool/attr-get % :gate/error)) gates)))))))
 
@@ -1044,7 +1044,7 @@
           (workflow/start! run-id (evidence-workflow aspect-key only-gate) {}
                            {:family "dresser"})
           (workflow/complete! run-id
-                              {:by "shell"
+                              {:executor "shell"
                                :attributes {"shell/exit-code" 0}})
           (let [data (thrown-data #(dresser/stamp! aspect-key root))]
             (is (contains? (violation-types data "init-header") :missing-gate))
@@ -1062,7 +1062,7 @@
           (workflow/start! run-id (evidence-workflow aspect-key wrong-gate) {}
                            {:family "dresser"})
           (workflow/complete! run-id
-                              {:by "shell"
+                              {:executor "shell"
                                :attributes {"shell/exit-code" 0}})
           (let [data (thrown-data #(dresser/stamp! aspect-key root))]
             (is (contains? (violation-types data "agent-docs-files") :missing-gate))
@@ -1095,14 +1095,14 @@
         (fn [_]
           (workflow/start! run-id (evidence-workflow aspect-key gates) {}
                            {:family "dresser"})
+          ;; An actor called shell is not the shell executor, even with exit 0.
           (workflow/complete! run-id
-                              {:by "human"
+                              {:by-identity "shell"
                                :attributes {"shell/exit-code" 0}})
           (let [data (thrown-data #(dresser/stamp! aspect-key root))]
-            (is (contains? (violation-types data "agent-docs-files") :outcome-by))
-            (is (= "human"
-                   (:actual (some #(when (= :outcome-by (:violation %)) %)
-                                  (:violations data)))))))))))
+            (is (contains? (violation-types data "agent-docs-files") :executor))
+            (is (nil? (:actual (some #(when (= :executor (:violation %)) %)
+                                     (:violations data)))))))))))
 
 (deftest millstrand-dir-e2e-stamps-all-aspects-without-touching-host-tree
   (fixtures/with-temp-dir [parent]

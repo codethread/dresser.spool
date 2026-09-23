@@ -108,7 +108,7 @@ records `workflow/definition-name` on its root.
 
 The driver repeats `next` and `advance` for agent-owned work. Ready gates belong
 to the shell executor. A zero exit closes a gate with
-`workflow/outcome-by = "shell"` and `shell/exit-code = 0`. The workflow closes
+`workflow/executor = "shell"` and `shell/exit-code = 0`. The workflow closes
 only after every selected aspect's work and gates close. `stamp` is a separate,
 explicit operation after the run is done.
 
@@ -160,7 +160,9 @@ application date into the receipt.
 
 ## Attributes
 
-The dresser attribute namespace is declared by the module's lifecycle seed.
+Dresser writes these open attributes on its workflow roots, steps and gates.
+They need no vocabulary registration; the lifecycle seed checks only the shell
+executor prerequisite.
 
 | Attribute | Present on | Meaning |
 |---|---|---|

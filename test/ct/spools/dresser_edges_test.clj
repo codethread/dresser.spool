@@ -137,7 +137,7 @@
             (is (apply not= (map #(get-in % [:root :id]) history)))
             (is (str/includes? (ex-message exception) "stamp evidence failed"))
             (is (seq (set/intersection
-                      #{:gate-not-closed :outcome-by :exit-code}
+                      #{:gate-not-closed :executor :exit-code}
                       violations))
                 "molecule-one green gates are stale for molecule two")))))))
 
@@ -197,7 +197,7 @@
             (is (= 2 (count (workflow/run-history run-id))))
             (is (seq gates))
             (is (every? #(nil? (spool/attr-get % :shell/exit-code)) gates))
-            (is (every? #(not= "shell" (spool/attr-get % :workflow/outcome-by))
+            (is (every? #(not= "shell" (spool/attr-get % :workflow/executor))
                         gates))))))))
 
 (deftest plan-op-classifies-bogus-fingerprint-and-future-release
