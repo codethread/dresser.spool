@@ -172,6 +172,19 @@ PATH=/opt/homebrew/opt/openjdk/bin:$PATH make fmt-check lint test
 The repository's `.millstrand/init.clj` remains the minimal batteries bootstrap.
 Dresser is not activated in its own workspace.
 
+### Workflow authoring
+
+Start with the shared [Workflow cookbook](https://github.com/codethread/millhouse.spool/blob/main/spools/workflow/workflow.cookbook.md).
+Dresser's aspect registry supplies step-local work; the generator declares
+linear dependencies and ordered umbrella calls. Keep owned-file conflicts and
+external Pages configuration as real decisions, not extra acknowledgements.
+
+Instructions render at pour, not when a step becomes ready. Later results need
+explicit durable reads or fresh continuation params; completing a step with
+context does not rewrite later instructions. Split work at owner, output, wait,
+authorization or recovery boundaries, not at every verb. A human checkpoint
+label records coordination intent, not authenticated user approval.
+
 Canonical template content lives under `resources/ct/spools/dresser/templates/`,
 one file per key in `ct.spools.dresser.templates/templates`, at the key's own
 path. A key ending in `.clj`/`.cljc` gets a `.template` extension on disk: millstrand
